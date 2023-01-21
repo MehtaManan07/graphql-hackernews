@@ -10,10 +10,24 @@ const parseIntSafe = (value: string): number | null => {
   }
   return null;
 };
+
+const applyTakeConstraints = (params: {
+  min: number;
+  max: number;
+  value: number;
+}) => {
+  if (params.value < params.min || params.value > params.max) {
+    throw new GraphQLError(
+      `'take' argument value '${params.value}' is outside the valid range of '${params.min}' to '${params.max}'.`
+    );
+  }
+  return params.value;
+};
+
 const typeDefinitions = /* GraphQL */ `
   type Query {
     info: String!
-    feed(filterNeedle: String): [Link!]!
+    feed(filterNeedle: String, skip: Int, take: Int): [Link!]!
     comment(id: ID!): Comment
     allComments: [Comment!]!
   }
@@ -42,7 +56,7 @@ const resolvers = {
     // 3
     feed(
       parent: unknown,
-      args: { filterNeedle?: string },
+      args: { filterNeedle?: string; skip?: number; take?: number },
       context: GraphQLContext
     ) {
       const where = args.filterNeedle
@@ -53,7 +67,16 @@ const resolvers = {
             ],
           }
         : {};
-      return context.prisma.link.findMany({ where });
+      const take = applyTakeConstraints({
+        min: 1,
+        max: 50,
+        value: args.take ?? 30,
+      });
+      return context.prisma.link.findMany({
+        where,
+        skip: args.skip,
+        take,
+      });
     },
     async comment(
       parent: unknown,
