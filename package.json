@@ -5,7 +5,7 @@
   "license": "MIT",
   "scripts": {
     "dev": "cross-env NODE_ENV=development ts-node-dev --exit-child --respawn src/server.ts",
-    "start": "ts-node src/main.ts"
+    "start": "ts-node src/server.ts"
   },
   "devDependencies": {
     "@prisma/client": "^4.9.0",
